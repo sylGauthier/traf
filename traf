@@ -103,7 +103,7 @@ traf_get_global_entries() {
         cur="$(traf_get_local_entries "$project")"
         test -n "$cur" && cur="$cur\n"
         printf "$cur" | sed -e "s/\(^[^ ]* \)/\1${blue}${bold}[$name] ${reset}/g"
-    done < "$HOME/.traf"
+    done < "$HOME/.trafprojs"
 }
 
 traf_browse_global_entries() {
@@ -134,7 +134,7 @@ case "$1" in
         if [ -z "$1" ] ; then
             git -C .traf init
         fi
-        find_traf_dir >> "$HOME/.traf"
+        find_traf_dir >> "$HOME/.trafprojs"
         ;;
     todo)
         shift
