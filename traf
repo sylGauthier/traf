@@ -72,28 +72,42 @@ open_entry() {
     done
 }
 
-traf_entries() {
+traf_get_local_entries() {
+    TODO="$(get_entries "$1" "todo" "$(set_fg 1)")"
+    test -n "$TODO" && TODO="$TODO\n"
+    WIP="$(get_entries "$1" "wip" "$(set_fg 3)")"
+    test -n "$WIP" && WIP="$WIP\n"
+    DONE="$(get_entries "$1" "done" "$(set_fg 2)")"
+    printf "$TODO$WIP$DONE"
+}
+
+traf_browse_local_entries() {
     DIR="$(find_traf_dir)"
     test -z "$DIR" && exit 1
 
     while true ; do
-        ENTRY="$(get_entries "$DIR" "$1" | choice)"
-        test -z "$ENTRY" && exit 0
-        open_entry "$DIR" "$1" "$ENTRY" || return 0
+        SEL="$(traf_get_local_entries "$DIR" | choice)"
+        test -z "$SEL" && exit 0
+        open_entry "$SEL" || return 0
     done
 }
 
-traf_all() {
-    DIR="$(find_traf_dir)"
-    test -z "$DIR" && exit 1
+traf_get_global_entries() {
+    blue="$(set_fg $COLOR_BLUE)"
+    bold="$(set_bold)"
+    reset="$(reset_fg)$(reset_bold)"
+    while read -r project ; do
+        base="${project%/*}"
+        name="${base##*/}"
+        cur="$(traf_get_local_entries "$project")"
+        test -n "$cur" && cur="$cur\n"
+        printf "$cur" | sed -e "s/\(^[^ ]* \)/\1${blue}${bold}[$name] ${reset}/g"
+    done < "$HOME/.traf"
+}
 
+traf_browse_global_entries() {
     while true ; do
-        TODO="$(get_entries "$DIR" "todo" "$(set_fg 1)")"
-        test -n "$TODO" && TODO="$TODO\n"
-        WIP="$(get_entries "$DIR" "wip" "$(set_fg 3)")"
-        test -n "$WIP" && WIP="$WIP\n"
-        DONE="$(get_entries "$DIR" "done" "$(set_fg 2)")"
-        SEL="$(printf "$TODO$WIP$DONE" | choice)"
+        SEL="$(traf_get_global_entries | choice)"
         test -z "$SEL" && exit 0
         open_entry "$SEL" || return 0
     done
@@ -107,17 +121,21 @@ print_help() {
 
 case "$1" in
     init)
-        mkdir .traf
+        mkdir .traf || exit 1
         for i in todo wip done ; do
-            mkdir ".traf/$i"
+            mkdir ".traf/$i" || exit 1
         done
+        find_traf_dir >> "$HOME/.traf"
         ;;
     todo)
         shift
         traf_add "$1"
         ;;
+    all)
+        traf_browse_global_entries
+        ;;
     "")
-        traf_all
+        traf_browse_local_entries
         ;;
     *)
         print_help
