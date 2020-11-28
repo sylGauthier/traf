@@ -121,11 +121,17 @@ print_help() {
 
 case "$1" in
     init)
-        mkdir .traf || exit 1
+        shift
+        if [ -n "$1" ] ; then
+            git clone "$1" ".traf"
+        fi
+        mkdir -p .traf || exit 1
         for i in todo wip done ; do
-            mkdir ".traf/$i" || exit 1
+            mkdir -p ".traf/$i" || exit 1
         done
-        git -C .traf init
+        if [ -z "$1" ] ; then
+            git -C .traf init
+        fi
         find_traf_dir >> "$HOME/.traf"
         ;;
     todo)
