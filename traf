@@ -59,9 +59,10 @@ open_entry() {
     reset_fg
     reset_bold
     while true ; do
-        printf "[w] WIP | [d] DONE | [e] edit entry | [b] back | [q] quit\n"
+        printf "[t] TODO | [w] WIP | [d] DONE | [e] edit entry | [b] back | [q] quit\n"
         read -r res
         case "$res" in
+            t) mv "$1" "$DIR/todo/$ENTRY" ; return 0 ;;
             w) mv "$1" "$DIR/wip/$ENTRY" ; return 0 ;;
             d) mv "$1" "$DIR/done/$ENTRY" ; return 0 ;;
             e) $ED "$1" ; return 0 ;;
