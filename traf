@@ -1,0 +1,125 @@
+#!/bin/sh
+
+. color.sh
+
+ED="$(test -n "$EDITOR" && echo "$EDITOR" || echo "/usr/bin/vi")"
+
+find_traf_dir() {
+    res="$(pwd)"
+
+    while [ ! -d "$res/.traf" ] ; do
+        if [ "$res" == "/" ] ; then
+            echo "Could not find a .traf directory here or in any parent directory" 1>&2
+            exit 1
+        fi
+        res="$(dirname "$res")"
+    done
+
+    res="$res/.traf"
+    printf "$res\n"
+}
+
+traf_new_idx() {
+    DIR="$1"
+    MAX="$(find "$DIR/todo" "$DIR/wip" "$DIR/done" -printf "%f\n" | sort -n | tail -n 1)"
+    printf "%d\n" $((MAX+1))
+}
+
+traf_add() {
+    DIR="$(find_traf_dir)"
+    test -z "$DIR" && exit 1
+
+    NEW="$(traf_new_idx "$DIR")"
+    test -z "$NEW" && exit 1
+
+    if [ -n "$1" ] ; then
+        printf "$1\n" > "$DIR/todo/$NEW"
+        return
+    fi
+    $ED "$DIR/todo/$NEW"
+}
+
+get_entries() {
+    l="$(find "$1/$2" -type f)"
+    reset="$(reset_fg)"
+    for i in $l ; do
+        printf "%s $3${2^^}$reset: %s\n" "$i" "$(head "$i" -n 1)"
+    done
+}
+
+open_entry() {
+    ENTRY="${1##*/}"
+    BASE="${1%/*}"
+    CATEGORY="${BASE##*/}"
+    DIR="${BASE%/*}"
+
+    set_bold
+    set_fg 3
+    cat "$1"
+    reset_fg
+    reset_bold
+    while true ; do
+        printf "[w] WIP | [d] DONE | [e] edit entry | [b] back | [q] quit\n"
+        read -r res
+        case "$res" in
+            w) mv "$1" "$DIR/wip/$ENTRY" ; return 0 ;;
+            d) mv "$1" "$DIR/done/$ENTRY" ; return 0 ;;
+            e) $ED "$1" ; return 0 ;;
+            b) return 0 ;;
+            q) return 1 ;;
+            *) printf "Invalid input\n" 1>&2 ;;
+        esac
+    done
+}
+
+traf_entries() {
+    DIR="$(find_traf_dir)"
+    test -z "$DIR" && exit 1
+
+    while true ; do
+        ENTRY="$(get_entries "$DIR" "$1" | choice)"
+        test -z "$ENTRY" && exit 0
+        open_entry "$DIR" "$1" "$ENTRY" || return 0
+    done
+}
+
+traf_all() {
+    DIR="$(find_traf_dir)"
+    test -z "$DIR" && exit 1
+
+    while true ; do
+        TODO="$(get_entries "$DIR" "todo" "$(set_fg 1)")"
+        test -n "$TODO" && TODO="$TODO\n"
+        WIP="$(get_entries "$DIR" "wip" "$(set_fg 3)")"
+        test -n "$WIP" && WIP="$WIP\n"
+        DONE="$(get_entries "$DIR" "done" "$(set_fg 2)")"
+        SEL="$(printf "$TODO$WIP$DONE" | choice)"
+        test -z "$SEL" && exit 0
+        open_entry "$SEL" || return 0
+    done
+}
+
+print_help() {
+    printf "traf [init|todo [<task name>]]\n"
+    printf "    init: init traff in the current directory\n"
+    printf "    todo [<task_name>]: add a todo task, if no argument supplied, open the \$EDITOR (or vi if variable empty) to write a detailed task\n"
+}
+
+case "$1" in
+    init)
+        mkdir .traf
+        for i in todo wip done ; do
+            mkdir ".traf/$i"
+        done
+        ;;
+    todo)
+        shift
+        traf_add "$1"
+        ;;
+    "")
+        traf_all
+        ;;
+    *)
+        print_help
+        exit 1
+esac
