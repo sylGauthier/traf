@@ -114,9 +114,10 @@ traf_browse_global_entries() {
 }
 
 print_help() {
-    printf "traf [init|todo [<task name>]]\n"
-    printf "    init: init traff in the current directory\n"
+    printf "traf [init | todo [<task name>] | all]\n"
+    printf "    init [repo_url]: init traff in the current directory. If a repo URL is given, it will clone it into .traf\n"
     printf "    todo [<task_name>]: add a todo task, if no argument supplied, open the \$EDITOR (or vi if variable empty) to write a detailed task\n"
+    printf "    all: display all tasks in all projects referenced in \$HOME/.traff"
 }
 
 case "$1" in
