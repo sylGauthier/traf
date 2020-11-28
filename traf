@@ -125,6 +125,7 @@ case "$1" in
         for i in todo wip done ; do
             mkdir ".traf/$i" || exit 1
         done
+        git -C .traf init
         find_traf_dir >> "$HOME/.traf"
         ;;
     todo)
@@ -133,6 +134,21 @@ case "$1" in
         ;;
     all)
         traf_browse_global_entries
+        ;;
+    syncup)
+        DIR="$(find_traf_dir)"
+        git -C "$DIR" add .
+        git -C "$DIR" commit -m "update"
+        git -C "$DIR" push
+        ;;
+    syncdown)
+        DIR="$(find_traf_dir)"
+        git -C "$DIR" pull
+        ;;
+    git)
+        DIR="$(find_traf_dir)"
+        shift
+        git -C "$DIR" $@
         ;;
     "")
         traf_browse_local_entries
