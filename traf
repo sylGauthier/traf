@@ -85,6 +85,18 @@ traf_ed() {
     fi
 }
 
+traf_rm() {
+    ENTRY="${1##*/}"
+    DIR="${1%/*}"
+    DIR="${DIR%/*}"
+
+    rm "$1"
+    if traf_git_exists "$DIR" ; then
+        git -C "$DIR" add "$1"
+        git -C "$DIR" commit -m "delete entry $ENTRY"
+    fi
+}
+
 open_entry() {
     ENTRY="${1##*/}"
     BASE="${1%/*}"
@@ -97,13 +109,14 @@ open_entry() {
     reset_fg
     reset_bold
     while true ; do
-        printf "[t] TODO | [w] WIP | [d] DONE | [e] edit entry | [b] back | [q] quit\n"
+        printf "[t] TODO | [w] WIP | [d] DONE | [e] edit entry | [r] remove entry | [b] back | [q] quit\n"
         read -r res
         case "$res" in
             t) traf_mv "$1" "$DIR/todo/$ENTRY" ; return 0 ;;
             w) traf_mv "$1" "$DIR/wip/$ENTRY" ; return 0 ;;
             d) traf_mv "$1" "$DIR/done/$ENTRY" ; return 0 ;;
             e) traf_ed "$1" ; return 0 ;;
+            r) traf_rm "$1" ; return 0 ;;
             b) return 0 ;;
             q) return 1 ;;
             *) printf "Invalid input\n" 1>&2 ;;
