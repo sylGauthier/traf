@@ -25,6 +25,10 @@ traf_new_idx() {
     printf "%d\n" $((MAX+1))
 }
 
+traf_git_exists() {
+    git --git-dir="$1/.git" status > /dev/null 2>&1
+}
+
 traf_add() {
     DIR="$(find_traf_dir)"
     test -z "$DIR" && exit 1
@@ -34,9 +38,15 @@ traf_add() {
 
     if [ -n "$1" ] ; then
         printf "$1\n" > "$DIR/todo/$NEW"
-        return
+    else
+        $ED "$DIR/todo/$NEW"
     fi
-    $ED "$DIR/todo/$NEW"
+    if traf_git_exists "$DIR" ; then
+        git -C "$DIR" add "$DIR/todo/$NEW"
+        git -C "$DIR" commit -m "new entry: $NEW"
+    else
+        echo nogit
+    fi
 }
 
 get_entries() {
@@ -45,6 +55,34 @@ get_entries() {
     for i in $l ; do
         printf "%s $3${2^^}$reset: %s\n" "$i" "$(head "$i" -n 1)"
     done
+}
+
+traf_mv() {
+    ENTRY1="${1##*/}"
+    BASE1="${1%/*}"
+    CAT1="${BASE1##*/}"
+    ENTRY2="${2##*/}"
+    BASE2="${2%/*}"
+    CAT2="${BASE2##*/}"
+    DIR="${BASE1%/*}"
+
+    mv "$1" "$2"
+    if traf_git_exists "$DIR" ; then
+        git -C "$DIR" add "$1" "$2"
+        git -C "$DIR" commit -m "switch entry $ENTRY1 from $CAT1 to $CAT2"
+    fi
+}
+
+traf_ed() {
+    ENTRY="${1##*/}"
+    DIR="${1%/*}"
+    DIR="${DIR%/*}"
+
+    $ED "$1"
+    if traf_git_exists "$DIR" ; then
+        git -C "$DIR" add "$1"
+        git -C "$DIR" commit -m "edit entry $ENTRY"
+    fi
 }
 
 open_entry() {
@@ -62,10 +100,10 @@ open_entry() {
         printf "[t] TODO | [w] WIP | [d] DONE | [e] edit entry | [b] back | [q] quit\n"
         read -r res
         case "$res" in
-            t) mv "$1" "$DIR/todo/$ENTRY" ; return 0 ;;
-            w) mv "$1" "$DIR/wip/$ENTRY" ; return 0 ;;
-            d) mv "$1" "$DIR/done/$ENTRY" ; return 0 ;;
-            e) $ED "$1" ; return 0 ;;
+            t) traf_mv "$1" "$DIR/todo/$ENTRY" ; return 0 ;;
+            w) traf_mv "$1" "$DIR/wip/$ENTRY" ; return 0 ;;
+            d) traf_mv "$1" "$DIR/done/$ENTRY" ; return 0 ;;
+            e) traf_ed "$1" ; return 0 ;;
             b) return 0 ;;
             q) return 1 ;;
             *) printf "Invalid input\n" 1>&2 ;;
@@ -125,15 +163,12 @@ case "$1" in
     init)
         shift
         if [ -n "$1" ] ; then
-            git clone "$1" ".traf"
+            git clone "$1" ".traf" || exit 1
         fi
         mkdir -p .traf || exit 1
         for i in todo wip done ; do
             mkdir -p ".traf/$i" || exit 1
         done
-        if [ -z "$1" ] ; then
-            git -C .traf init
-        fi
         find_traf_dir >> "$HOME/.trafprojs"
         ;;
     todo)
@@ -143,20 +178,10 @@ case "$1" in
     all)
         traf_browse_global_entries
         ;;
-    syncup)
-        DIR="$(find_traf_dir)"
-        git -C "$DIR" add .
-        git -C "$DIR" commit -m "update"
-        git -C "$DIR" push
-        ;;
-    syncdown)
-        DIR="$(find_traf_dir)"
-        git -C "$DIR" pull
-        ;;
     git)
         DIR="$(find_traf_dir)"
         shift
-        git -C "$DIR" $@
+        git -C "$DIR" --git-dir="$DIR/.git" $@
         ;;
     "")
         traf_browse_local_entries
