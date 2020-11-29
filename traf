@@ -21,7 +21,7 @@ find_traf_dir() {
 
 traf_new_idx() {
     DIR="$1"
-    MAX="$(find "$DIR/todo" "$DIR/wip" "$DIR/done" -exec basename {} \; | sort -n | tail -n 1)"
+    MAX="$(find "$DIR/todo" "$DIR/wip" "$DIR/done" -type f -exec basename {} \; | sort -n | tail -n 1)"
     printf "%d\n" $((MAX+1))
 }
 
