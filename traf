@@ -8,7 +8,7 @@ find_traf_dir() {
     res="$(pwd)"
 
     while [ ! -d "$res/.traf" ] ; do
-        if [ "$res" == "/" ] ; then
+        if [ "$res" = "/" ] ; then
             echo "Could not find a .traf directory here or in any parent directory" 1>&2
             exit 1
         fi
