@@ -38,12 +38,14 @@ traf_add() {
 
     if [ -n "$1" ] ; then
         printf "$1\n" > "$DIR/todo/$NEW"
+        summary="$1"
     else
         $ED "$DIR/todo/$NEW"
+        summary="$(head -n 1 "$DIR/todo/$NEW")"
     fi
     if traf_git_exists "$DIR" ; then
         git -C "$DIR" add "$DIR/todo/$NEW"
-        git -C "$DIR" commit -m "new entry: $NEW"
+        git -C "$DIR" commit -m "new entry: $NEW" -m "task summary: $summary"
     fi
 }
 
@@ -64,11 +66,13 @@ traf_mv() {
     BASE2="${2%/*}"
     CAT2="${BASE2##*/}"
     DIR="${BASE1%/*}"
+    summary="$(head -n 1 "$1")"
 
     mv "$1" "$2"
     if traf_git_exists "$DIR" ; then
         git -C "$DIR" add "$1" "$2"
-        git -C "$DIR" commit -m "switch entry $ENTRY1 from $CAT1 to $CAT2"
+        git -C "$DIR" commit -m "switch entry $ENTRY1 from $CAT1 to $CAT2" \
+                             -m "task summary: $summary"
     fi
 }
 
@@ -78,9 +82,11 @@ traf_ed() {
     DIR="${DIR%/*}"
 
     $ED "$1"
+    summary="$(head -n 1 "$1")"
     if traf_git_exists "$DIR" ; then
         git -C "$DIR" add "$1"
-        git -C "$DIR" commit -m "edit entry $ENTRY"
+        git -C "$DIR" commit -m "edit entry $ENTRY" \
+                             -m "task summary: $summary"
     fi
 }
 
@@ -88,11 +94,13 @@ traf_rm() {
     ENTRY="${1##*/}"
     DIR="${1%/*}"
     DIR="${DIR%/*}"
+    summary="$(head -n 1 "$1")"
 
     rm "$1"
     if traf_git_exists "$DIR" ; then
         git -C "$DIR" add "$1"
-        git -C "$DIR" commit -m "delete entry $ENTRY"
+        git -C "$DIR" commit -m "delete entry $ENTRY" \
+                             -m "task summary: $summary"
     fi
 }
 
