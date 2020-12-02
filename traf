@@ -54,7 +54,7 @@ get_entries() {
     reset="$(reset_fg)"
     for i in $l ; do
         CATEGORY="$(echo "$2" | tr [a-z] [A-Z])"
-        printf "%s $3$CATEGORY$reset: %s\n" "$i" "$(head -n 1 "$i")"
+        printf "%s $3$CATEGORY$reset   \t%s\n" "$i" "$(head -n 1 "$i")"
     done
 }
 
@@ -160,7 +160,7 @@ traf_get_global_entries() {
         name="${base##*/}"
         cur="$(traf_get_local_entries "$project")"
         test -n "$cur" && cur="$cur\n"
-        printf "$cur" | sed -e "s/\(^[^ ]* \)/\1${blue}${bold}[$name] ${reset}/g"
+        printf "$cur" | sed -e "s/\(^[^ ]* \)/\1${blue}${bold}[$name]${reset}    \t/g"
     done < "$HOME/.trafprojs"
 }
 
