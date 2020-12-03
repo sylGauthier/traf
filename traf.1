@@ -1,0 +1,81 @@
+.TH TRAF 1 2020-12-03
+.SH NAME
+traf \- a CLI minimal kanban board
+
+.SH SYNOPSIS
+.B traf
+[<command>] [<args>]
+
+.SH DESCRIPTION
+.B traf
+is a minimal kanban board / TODO list manager. It can manage multiple separate
+projects and aggregate all the tasks in a single list view. Tasks are created
+and marked as
+.IR TODO ,
+they can be listed, searched through and selected, then marked as
+.I WIP
+(work in progress) and
+.IR DONE .
+
+Git can be used as a mean of synchronisation and logging activity.
+
+.SH COMMANDS
+.TP
+.BR all
+All tasks from all projects listed in the
+.I $HOME/.trafprojs
+file will be listed and can be edited in the same way as above.
+.TP
+.BI "git " \fR[\fPgit_command\fR]\fP
+Execute
+.B git
+with
+.I git_command
+as its arguments in the current
+.I .traf
+directory.
+.TP
+.BI "init " \fR[\fPrepo_url\fR]\fP
+Init a traf project by creating
+.I .traf
+and relevant subdirectories. If
+.I repo_url
+is specified, it will instead clone this repository under
+.IR .traf .
+It will also create
+.I $HOME/.trafprojs
+if it doesn't exist and append the path of the new project into it.
+.TP
+.BI "todo " \fR[\fPtask\fR]\fP
+Add a task with optional summary. If no summary is given, the editor specified
+in the
+.I $EDITOR
+environment variable will be used to open the task file for editing the task.
+The first line will be used as summary for list display.
+
+If no command is given, all tasks will be displayed in a list for
+searching/selecting. The selected task can then be interactively edited, its
+status switched, or deleted.
+
+.SH ENVIRONMENT VARIABLES
+.TP
+.I EDITOR
+Contains the command for the text editor used to edit tasks. If empty,
+.I /usr/bin/vi
+will be assumed.
+
+.SH FILES
+.TP
+.I $HOME/.trafprojs
+Contains the list of all projects. Projects that the user doesn't want to be
+considered when running
+.B traf all
+can just be removed.
+
+.SH AUTHOR
+.B traf
+was written by Sylvain Gauthier (syg@pedantic.software). For more info, visit
+https://pedantic.software
+
+.SH SEE ALSO
+.IR choice "(1), " git (1)
