@@ -172,6 +172,21 @@ traf_browse_global_entries() {
     done
 }
 
+traf_all_git() {
+    while read -r project ; do
+        set_fg "$COLOR_BLUE"
+        set_bold
+        printf "[$project]\n"
+        reset_fg
+        reset_bold
+        if traf_git_exists "$project" ; then
+            git -C "$project" $@
+        else
+            printf "nogit\n"
+        fi
+    done < "$HOME/.trafprojs"
+}
+
 print_help() {
     printf "traf [init | todo [<task summary>] | all | git]\n"
     printf "    init [repo_url]: init traff in the current directory. If a repo URL is given, it will clone it into .traf\n"
@@ -197,7 +212,19 @@ case "$1" in
         traf_add "$1"
         ;;
     all)
-        traf_browse_global_entries
+        shift
+        case "$1" in
+            git)
+                shift
+                traf_all_git $@
+                ;;
+            "")
+                traf_browse_global_entries
+                ;;
+            *)
+                print_help
+                ;;
+        esac
         ;;
     git)
         DIR="$(find_traf_dir)"
