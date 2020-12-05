@@ -21,10 +21,13 @@ Git can be used as a mean of synchronisation and logging activity.
 
 .SH COMMANDS
 .TP
-.BR all
-All tasks from all projects listed in the
+.BI "all " "\fR[\fPgit \fR[\fPgit_command\fR]]\fP"
+If no argument given, all tasks from all projects listed in the
 .I $HOME/.trafprojs
-file will be listed and can be edited in the same way as above.
+file will be listed and can be edited in the same way as above. If
+.I git
+is specified, will execute the git command in all listed projects (useful to
+sync quickly all projects at once).
 .TP
 .BI "git " \fR[\fPgit_command\fR]\fP
 Execute
